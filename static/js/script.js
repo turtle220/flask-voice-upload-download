@@ -81,9 +81,14 @@ $(function(){
 
         complete:function(e)
         {
-	        if(window.response.responseText!='Upload Failed')
+            var jsonResponse = JSON.parse(window.response.responseText);
+
+	        if(jsonResponse!='Upload Failed')
 	           {
-		           tpl.find('a').attr("href", "download/"+window.response.responseText);
+		           tpl.find('a').attr("href", "download/"+jsonResponse.filehash);
+                   document.getElementById('upload-result').textContent = jsonResponse.id;
+                //    document.getElementById('upload-result-hash').textContent = jsonResponse.filehash;
+
 	           }
         }
 
