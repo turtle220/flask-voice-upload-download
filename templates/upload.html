@@ -5,13 +5,15 @@
 <body>
   <div class="upload-container">
     <h3>Upload Files</h3>
-    <form id="upload" method="post" action="/upload" enctype="multipart/form-data">
-      <div id="drop">
-        Drop Files Here or Click Browse <br />
-        <a class="btn btn-primary btn-lg"> <i class="icon icon-plus"></i> Browse</a>
-        <input type="file" name="file" multiple />
-      </div>
+    <input id="file_input" type="file" name="file" accept="audio/*" multiple />
+
+    <form id="upload_form" enctype="multipart/form-data">
+      <button type="button" id="upload_button" class="btn btn-primary btn-lg"> <i class="icon icon-plus"></i>
+        Upload</button>
     </form>
+
+    <div id="upload_result"></div>
+
     <div class="download-output">
       <div>
         <h3 style="margin: 0 auto; padding-bottom: 10px; border-bottom: 1px solid #ccc;">Download File</h3>
@@ -34,7 +36,7 @@
       const uploadResultInput = document.getElementById('upload-result');
 
       submitLink.addEventListener('click', function (event) {
-        event.preventDefault(); // Prevent the default link behavior
+        event.preventDefault();
 
         const uploadResultValue = uploadResultInput.value;
         const textContentValue = textContentTextarea.value;

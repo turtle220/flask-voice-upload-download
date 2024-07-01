@@ -1,99 +1,64 @@
 $(function(){
-
-    var ul = $('#upload ul');
+    var ul = $('#upload_list');
 
     $('#drop a').click(function(){
         // Simulate a click on the file input button
-        // to show the file browser dialog
-        $(this).parent().find('input').click();
+        $('#file_input').click();
     });
 
-    // Initialize the jQuery File Upload plugin
-    $('#upload').fileupload({
-
-        // This element will accept file drag/drop uploading
-        dropZone: $('#drop'),
-
-        // This function is called when a file is added to the queue;
-        // either via the browse button, or via drag/drop:
-        add: function (e, data) {
-
+    // Handle the file input change event
+    $('#file_input').on('change', function(){
+        var files = this.files;
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
             var tpl = $('<li class="working"><input type="text" value="0" data-width="48" data-height="48"'+
-                ' data-fgColor="#0788a5" data-readOnly="1" data-bgColor="#3e4043" /><p></p><span></span><a target="_blank" class="btn btn-warning" id="download-btn"> <i class="icon icon-download"></i> Download</a></li>');
+                ' data-fgColor="#0788a5" data-readOnly="1" data-bgColor="#3e4043" /><p></p><span></span></li>');
 
-             window.tpl=tpl;
+            tpl.find('p').text(file.name).append('<i>' + formatFileSize(file.size) + '</i>');
 
-            // Append the file name and file size
-            tpl.find('p').text(data.files[0].name)
-                         .append('<i>' + formatFileSize(data.files[0].size) + '</i>');
+            data = {file: file};
+            tpl.appendTo(ul);
 
-            // Add the HTML to the UL element
-            data.context = tpl.appendTo(ul);
-
-            // Initialize the knob plugin
-            tpl.find('input').knob();
-
-            // Listen for clicks on the cancel icon
             tpl.find('span').click(function(){
-
-                if(tpl.hasClass('working')){
-                    jqXHR.abort();
-                }
-
                 tpl.fadeOut(function(){
                     tpl.remove();
                 });
-
             });
 
-            // Automatically upload the file once it is added to the queue
-	           var jqXHR = data.submit();
-	           window.response=jqXHR;
-	        //Cancel all Running Uploads
-	        $('#cancel-upload').click(function(){
-		        jqXHR.abort();
-	        });
-
-	        //Deleted all Running Uploads
-	        $('#delete-upload').click(function(){
-                    tpl.remove();
-	        });
-        },
-
-        progress: function(e, data){
-
-            // Calculate the completion percentage of the upload
-            var progress = parseInt(data.loaded / data.total * 100, 10);
-
-            // Update the hidden input field and trigger a change
-            // so that the jQuery knob plugin knows to update the dial
-            data.context.find('input').val(progress).change();
-
-            if(progress == 100){
-                data.context.removeClass('working');
-            }
-        },
-
-        fail:function(e, data){
-            // Something has gone wrong!
-            data.context.addClass('error');
-        },
-
-        complete:function(e)
-        {
-            var jsonResponse = JSON.parse(window.response.responseText);
-
-	        if(jsonResponse!='Upload Failed')
-	           {
-		           tpl.find('a').attr("href", "download/"+jsonResponse.filehash);
-                   document.getElementById('upload-result').textContent = jsonResponse.id;
-                //    document.getElementById('upload-result-hash').textContent = jsonResponse.filehash;
-
-	           }
+            tpl.find('input').knob();
         }
-
     });
 
+    $('#upload_button').click(function(){
+        var files = $('#file_input')[0].files;
+        if (files.length === 0) {
+            alert("Please select a file to upload.");
+            return;
+        }
+
+        var formData = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            formData.append('file', files[i]);
+        }
+
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response){
+                $('#upload_result').text('ID: ' + response.id + ', Name: ' + response.filename);
+
+                // Handle success
+                console.log('Upload successful!');
+            },
+            error: function(response){
+                // Handle error
+                console.log('Upload failed!');
+            }
+        });
+    });
 
     // Prevent the default action when a file is dropped on the window
     $(document).on('drop dragover', function (e) {
@@ -116,5 +81,4 @@ $(function(){
 
         return (bytes / 1000).toFixed(2) + ' KB';
     }
-
 });
